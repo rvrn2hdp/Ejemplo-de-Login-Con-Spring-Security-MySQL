@@ -16,7 +16,7 @@
         <div>
             <form th:action="@{/logout}" method="post">
                 <p>
-                    Welcome <b><span sec:authentication="principal.fullName"></span></b>    
+                    Welcome <b><span sec:authentication="principal.username"></span></b>    
                 </p>
                 <input type="submit" value="Sign Out" />
             </form>
@@ -31,19 +31,23 @@
                     <tr>
                         <th>User ID</th>
                         <th>Email</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
+                        <th>Username</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="user : ${users}">
                         <td th:text="${user.id}">User ID</td>
                         <td th:text="${user.email}">E-Mail</td>
-                        <td th:text="${user.firstName}">First Name</td>
-                        <td th:text="${user.lastName}">Last Name</td>
+                        <td th:text="${user.username}">Username</td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <div class="container text-center">
+        <div>
+            <h3><a th:href="@{/}">Back to Home</a></h3>
         </div>
     </div>
 </body>

@@ -5,18 +5,27 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
+// import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 
-import com.analistas.loginandsignin.model.entity.CustomUserDetailsService;
+import com.analistas.loginandsignin.model.service.CustomUserDetailsService;
+
 
 @Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
 public class WebSecurityConfig {
 
     @Autowired
@@ -28,11 +37,22 @@ public class WebSecurityConfig {
      *
      * @return UserDetailsService instance
      */
+
     @Bean
-    public UserDetailsService userDetailsService() {
-        // Returning an instance of CustomUserDetailsService as it implements
-        // UserDetailsService and is responsible for loading user details from
-        // a data source.
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+    
+    /**
+     * Creates a bean of type CustomUserDetailsService, which is responsible for
+     * loading user details from a data source. This bean is used to authenticate
+     * users and authorize their actions.
+     *
+     * @return CustomUserDetailsService instance
+     */
+    @Bean
+    public CustomUserDetailsService userDetailsService() {
+        // Instantiate and return an instance of CustomUserDetailsService
         return new CustomUserDetailsService();
     }
 
@@ -42,32 +62,38 @@ public class WebSecurityConfig {
     }
 
     /**
-     * Creates a bean of type DaoAuthenticationProvider which is responsible for
-     * authenticating users by verifying their credentials.
+     * Creates a bean of type AuthenticationProvider, which is responsible for
+     * authenticating users using the provided user details service and password encoder.
      *
-     * @return DaoAuthenticationProvider instance
+     * @param userDetailsService The user details service used to load user details from a data source.
+     * @return AuthenticationProvider instance
      */
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        // Creating an instance of DaoAuthenticationProvider
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+    public AuthenticationProvider authenticationProvider(CustomUserDetailsService userDetailsService) {
+        // Create a new instance of DaoAuthenticationProvider
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        // Set the password encoder to be used for encoding and decoding passwords
+        provider.setPasswordEncoder(passwordEncoder());
+        // Set the user details service to be used for loading user details
+        provider.setUserDetailsService(userDetailsService);
 
-        // Setting the userDetailsService bean which is responsible for loading user
-        // details from a data source
-        authProvider.setUserDetailsService(userDetailsService());
-
-        // Setting the passwordEncoder bean which is responsible for encoding and
-        // decoding passwords
-        authProvider.setPasswordEncoder(passwordEncoder());
-
-        // Returning the DaoAuthenticationProvider instance
-        return authProvider;
+        return provider;
     }
 
+    /**
+     * Creates a bean of type PersistentTokenRepository, which is responsible for
+     * storing and retrieving persistent login tokens. This bean is used to enable
+     * "Remember Me" functionality in the application.
+     *
+     * @return PersistentTokenRepository instance
+     */
     @Bean
     public PersistentTokenRepository persistentTokenRepository() {
+        // Create a new instance of JdbcTokenRepositoryImpl
         JdbcTokenRepositoryImpl tokenRepo = new JdbcTokenRepositoryImpl();
+        // Set the data source to be used for storing and retrieving persistent login tokens
         tokenRepo.setDataSource(dataSource);
+        // Return the created token repository
         return tokenRepo;
     }
 
@@ -83,9 +109,6 @@ public class WebSecurityConfig {
     @Bean
     SecurityFilterChain configure(HttpSecurity http) throws Exception {
 
-        // Configuring the authentication provider
-        http.authenticationProvider(authenticationProvider());
-
         // Configuring authorization for different endpoints
         http.authorizeHttpRequests(auth -> auth
                     .requestMatchers("/users", "/example")
@@ -96,7 +119,7 @@ public class WebSecurityConfig {
 
         // Configuring the form login behavior
         http.formLogin(login -> login
-                .usernameParameter("email") // Specifying the username parameter as "email"
+                .usernameParameter("username") // Specifying the username parameter as "email"
                 .defaultSuccessUrl("/users") // Redirecting to "/users" after successful login
                 .permitAll() // Allows access to the login form
         );

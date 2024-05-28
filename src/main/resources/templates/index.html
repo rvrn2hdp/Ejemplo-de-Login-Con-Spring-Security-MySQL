@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
 <head>
     <meta charset="UTF-8">
@@ -15,6 +15,12 @@
         <h3><a th:href="@{/login}">Click here to login</a></h3>
         <h3><a th:href="@{/register}">Click here to register</a></h3>
         <h3><a th:href="@{/users}">List of users</a></h3>
+        <h3><a sec:authorize="hasRole('ROLE_ADMIN')" href="#">List of admins</a></h3>
+        <h3><a sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_MODERATOR')" href="#">List of moderators</a></h3>
+        <h3><a sec:authorize="hasAnyAuthority('ROLE_USER', 'ROLE_MODERATOR', 'ROLE_ADMIN')" href="#">List of users</a></h3>
+        <h3><a sec:authorize="hasAnyAuthority('ROLE_USER', 'ROLE_MODERATOR', 'ROLE_GUEST', 'ROLE_ADMIN')" href="#">List of
+                guests</a>
+        </h3>
     </div>
 </body>
 

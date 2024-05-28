@@ -2,10 +2,12 @@ package com.analistas.loginandsignin.model.repository;
 
 import org.springframework.data.repository.CrudRepository;
 
-import com.analistas.loginandsignin.model.entity.User;
+import com.analistas.loginandsignin.model.entity.UserEntity;
 
-public interface UserRepository extends CrudRepository<User, Long> {
+public interface UserRepository extends CrudRepository<UserEntity, Long> {
 
-    User findByEmail(String email);
+    UserEntity findByEmail(String email);
+
+    UserEntity findByUsername(String username);
 
 }
